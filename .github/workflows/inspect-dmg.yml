@@ -13,7 +13,13 @@ jobs:
           DMG_URL: ${{ secrets.DMG_URL }}
         run: |
           test -n "$DMG_URL"
-          curl --fail --location --retry 3 --silent --show-error "$DMG_URL" -o "$RUNNER_TEMP/CompleteAnatomy.dmg"
+          : > "$RUNNER_TEMP/CompleteAnatomy.dmg"
+          for part in {0..104}; do
+            curl --fail --location --retry 5 --silent --show-error "$DMG_URL?part=$part" -o "$RUNNER_TEMP/part"
+            cat "$RUNNER_TEMP/part" >> "$RUNNER_TEMP/CompleteAnatomy.dmg"
+            if (( part % 10 == 0 )); then echo "Transferred segment $part of 104"; fi
+          done
+          rm "$RUNNER_TEMP/part"
           echo "c73499bd89cd6bb5c94605ea1f922b2dcdf3d7c52e6ccb834989007acfabffc0  $RUNNER_TEMP/CompleteAnatomy.dmg" | shasum -a 256 --check
 
       - name: Mount and show in Finder
