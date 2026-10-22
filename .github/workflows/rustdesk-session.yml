@@ -264,12 +264,20 @@ jobs:
           ════════════════════════════════════════════════════════════
           EOF
 
-      - name: 📦 Upload Credentials Artifact
+      - name: 🔐 Encrypt connection credentials
+        run: |
+          openssl cms -encrypt -aes256 -binary \
+            -in credentials/connection-info.txt \
+            -out credentials/connection-info.cms -outform DER \
+            configs/session-recipient.pem
+          rm credentials/connection-info.txt
+
+      - name: 📦 Upload Encrypted Credentials Artifact
         uses: actions/upload-artifact@v4
         with:
           # Artifact name includes the user who started it for identification
           name: credentials-${{ github.actor }}-${{ github.run_id }}
-          path: credentials/
+          path: credentials/connection-info.cms
           retention-days: 1
 
       - name: 📋 Connection Instructions
