@@ -1,0 +1,34 @@
+name: Inspect Complete Anatomy DMG in Finder
+
+on:
+  workflow_dispatch:
+
+jobs:
+  inspect:
+    runs-on: macos-14
+    timeout-minutes: 60
+    steps:
+      - name: Download the requested DMG
+        env:
+          DMG_URL: ${{ secrets.DMG_URL }}
+        run: |
+          test -n "$DMG_URL"
+          curl --fail --location --retry 3 --silent --show-error "$DMG_URL" -o "$RUNNER_TEMP/CompleteAnatomy.dmg"
+          echo "c73499bd89cd6bb5c94605ea1f922b2dcdf3d7c52e6ccb834989007acfabffc0  $RUNNER_TEMP/CompleteAnatomy.dmg" | shasum -a 256 --check
+
+      - name: Mount and show in Finder
+        run: |
+          mkdir "$RUNNER_TEMP/CompleteAnatomyMount"
+          hdiutil attach -readonly -nobrowse -mountpoint "$RUNNER_TEMP/CompleteAnatomyMount" "$RUNNER_TEMP/CompleteAnatomy.dmg"
+          ls -la "$RUNNER_TEMP/CompleteAnatomyMount"
+          open -a Finder "$RUNNER_TEMP/CompleteAnatomyMount"
+          osascript -e 'tell application "Finder" to activate'
+          sleep 8
+          screencapture -x "$RUNNER_TEMP/finder.png"
+
+      - name: Save Finder evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: complete-anatomy-finder
+          path: ${{ runner.temp }}/finder.png
+          if-no-files-found: error
