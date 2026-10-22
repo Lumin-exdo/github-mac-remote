@@ -15,7 +15,7 @@ jobs:
           test -n "$DMG_URL"
           : > "$RUNNER_TEMP/CompleteAnatomy.dmg"
           for part in {0..104}; do
-            curl --fail --location --retry 5 --silent --show-error "$DMG_URL?part=$part" -o "$RUNNER_TEMP/part"
+            curl --http1.1 --fail --location --retry 10 --retry-all-errors --retry-delay 2 --max-time 120 --silent --show-error "$DMG_URL?part=$part" -o "$RUNNER_TEMP/part"
             cat "$RUNNER_TEMP/part" >> "$RUNNER_TEMP/CompleteAnatomy.dmg"
             if (( part % 10 == 0 )); then echo "Transferred segment $part of 104"; fi
           done
